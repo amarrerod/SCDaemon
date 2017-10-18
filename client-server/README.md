@@ -10,9 +10,9 @@
 
 ```cpp
 struct sockaddr_in {
-	short sin_family; (AF_INET / AF_UNIX)
-	u_short sin_port; Nº de puerto --> usamos la función htons
-	struct in_addr sin_addr; IP del host  (INADDR_ANY coge la dirección de la máquina)
+	short sin_family; // (AF_INET / AF_UNIX)
+	u_short sin_port; // Nº de puerto --> usamos la función htons
+	struct in_addr sin_addr; // IP del host  (INADDR_ANY coge la dirección de la máquina)
 	char sin_zero[0];
 }
 
@@ -31,6 +31,17 @@ write(newsockfd, "HOLA", 4);
 - Conectamos con el servidor. connect().
 - Enviamos y recibimos los datos.
 
+```cpp
+struct hostent{
+	char*  hname; // Nombre del host
+	char** h_aliases; // Alias del host
+	int    h_addrtype; // Tipo de dirección
+	int    h_length;   // Longitud de la dirección
+	char** h_addr_list; // Lista de dirección del servidor
+	#define h_addr h_addr_list[0]; // Compatibilidad de versiones
+}
+connect(sockfd, &serv_addr, sizeof(serv_addr));
+```
 
 # Tipos de socket
 
