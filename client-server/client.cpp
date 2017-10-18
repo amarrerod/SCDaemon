@@ -5,6 +5,7 @@
  *
  **/
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -37,7 +38,7 @@ int main(int argc, char const* argv[]) {
 	servAddr.sin_family = AF_INET;
 	bcopy((char*)server->h_addr, (char*)& servAddr.sin_addr.s_addr, server->h_length);
 	servAddr.sin_port = htons(portNumber);
-	if (connect(sockfd, (struct sockaddr*)& servidor, sizeof(servAddr)) < 0) {
+	if (connect(sockfd, (struct sockaddr*)& servAddr, sizeof(servAddr)) < 0) {
 		cerr << "Errory trying to connect to server" << endl;
 		exit(-1);
 	}

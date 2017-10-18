@@ -1,5 +1,9 @@
 
-
+/**
+ * Como argumentos recibe el número de puerto en el que debe realizar la
+ * conexión
+ *
+ **/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +32,7 @@ int main(int argc, char const* argv[]) {
 	servAddr.sin_family = AF_INET;
 	servAddr.sin_addr.s_addr = INADDR_ANY;
 	servAddr.sin_port = htons(portNumber);
-	if (bind(sockfd, (struct sockaddr)& servAddr, sizeof(servAddr)) < 0) {
+	if (bind(sockfd, (struct sockaddr*)& servAddr, sizeof(servAddr)) < 0) {
 		cerr << "Error trying to bind" << endl;
 		exit(-1);
 	}
