@@ -33,5 +33,20 @@ int main(int argc, char const* argv[]) {
 		exit(-1);
 	}
 	listen(sockfd, 5);
+	clientLength = sizeof(clientAddr);
+	newSockFd = accept(sockfd, (struct sockaddr*)& clientAddr, &clientLength);
+	if (newSockFd < 0) {
+		cerr << "Error creating socket file descriptor for client" << endl;
+		exit(-1);
+	}
+	bzero(buffer, 256);
+	i = read(newSockFd, buffer, 255);
+	if (i < 0) {
+		cerr << "Error trying to read from buffer. I = " << i << endl;
+	} else {
+		cout << "Received message: " << buffer << endl;
+	}
+	close(newSockFd);
+	close(sockfd);
 	return 0;
 }
