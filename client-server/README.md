@@ -8,6 +8,22 @@
 - Aceptamos las peticiones con Accept(). (Bloquea la conexión mientras se conecta con el servidor, hay que determinar el nº máximo de conexiones a la vez)
 - Recibir y enviar datos. read() y write().
 
+```cpp
+struct sockaddr_in {
+	short sin_family; (AF_INET / AF_UNIX)
+	u_short sin_port; Nº de puerto --> usamos la función htons
+	struct in_addr sin_addr; IP del host  (INADDR_ANY coge la dirección de la máquina)
+	char sin_zero[0];
+}
+
+sockfd = socket(AF_INET/AF_UNIX, SOCK_STREAM/SOCK_DGRAM, 0);
+bind(sockfd, (struct sockaddr*)& serv_addr, sizeof(serv_addr));
+listen(sockfd, NUM_CONEXIONES);
+newsockfd = accept(sockfd, (struct sockaddr*)& cli_addr, sizeof(cli_addr));
+read(newsockfd, buffer, 255);
+write(newsockfd, "HOLA", 4);
+```
+
 
 # Cliente
 
@@ -28,13 +44,4 @@
 TCP --> Stream sockets, flujo continuo de caracteres.
 UDP --> Datagram sockets, paquetes o tramas.
 
-```
-struct sockaddr_in {
-	short sin_family; (AF_INET / AF_UNIX)
-	u_short sin_port; Nº de puerto --> usamos la función htons
-	struct in_addr sin_addr; IP del host  (INADDR_ANY coge la dirección de la máquina)
-	char sin_zero[0];
-}
 
-sockfd = socket(AF_INET/AF_UNIX, SOCK_STREAM/SOCK_DGRAM, 0);
-```
