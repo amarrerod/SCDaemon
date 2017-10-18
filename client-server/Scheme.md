@@ -24,3 +24,7 @@
 ## UNIX
 - UDP --> Nº de puerto (normalmente el 0).
 
+
+TCP --> Stream sockets, flujo continuo de caracteres.
+UDP --> Datagram sockets, paquetes o tramas.
+
