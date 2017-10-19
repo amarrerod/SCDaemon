@@ -1,10 +1,10 @@
 
 
-multiServer: serverMultiClients.cpp
-	g++ -g -o multiServer.o serverMultiClients.cpp
+server: server.cpp
+	g++ -g -std=c++11 -o server.o server.cpp
 
-client: client.cpp
-	g++ -g -o client.o client.cpp
+client: mainClient.cpp Client.cpp
+	g++ -g -std=c++11 -o client.o mainClient.cpp Client.cpp
 
 clean:
 	rm *.o

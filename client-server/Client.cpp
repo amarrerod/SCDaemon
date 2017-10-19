@@ -1,10 +1,13 @@
 
+
+
 /**
  * Como argumentos recibe el nombre del servidor (localhost en nuestro caso)
  * y el número de puerto en el que debe realizar la conexión
  *
  **/
 
+#include "Client.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,22 +18,23 @@
 #include <iostream>
 #include <netdb.h>
 #include <string>
+#include <iomanip>
+#include <sstream>
 
 using namespace std;
 
+Client::Client() { }
 
-int main(int argc, char const* argv[]) {
-	int sockfd, newSockFd, portNumber, i;
-	struct hostent* server;
-	char buffer[256];
-	struct sockaddr_in servAddr;
-	portNumber = atoi(argv[2]);
+Client::~Client() { }
+
+Client::Client(char const* host, int port) {
+	portNumber = port;
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		cerr << "Error creating socket file descriptor" << endl;
 		exit(-1);
 	}
-	server = gethostbyname(argv[1]); // Dirección del servidor
+	server = gethostbyname(host); // Dirección del servidor
 	if (server == NULL) {
 		cerr << "Error trying to get hostbyname for server" << endl;
 		exit(-1);
@@ -43,22 +47,46 @@ int main(int argc, char const* argv[]) {
 		cerr << "Errory trying to connect to server" << endl;
 		exit(-1);
 	}
+}
+
+void Client::run() {
+	// Enviamos el pid para identificar al cliente
+	long pid = (long) getpid();
+	ostringstream ss;
+	ss << pid;
+	string pidStr = ss.str();
+	send(sockfd, pidStr.c_str(), sizeof(pidStr.c_str()), 0);
 	bool finish = false;
+	i = read(sockfd, buffer, 255); // Leemos la confirmacion
+	if (i < 0) {
+		cerr << "Error trying to read from buffer" << endl;
+	} else {
+		cout << "Server: " << buffer << endl;
+	}
+	bzero(buffer, 256);
 	while (!finish) {
 		cout << "Introduzca el mensaje: \n> ";
 		bzero(buffer, 256);
 		fgets(buffer, 255, stdin);
+		string str(buffer, 4); // Posible comando de salida
 		i = write(sockfd, buffer, strlen(buffer));
 		if (i < 0) {
 			cerr << "Couldn't be able to write in the socket" << endl;
-			exit(-1);
 		}
-		string str(buffer, 4);
+		// Leemos la confirmacion
+		bzero(buffer, 256);
+		i = read(sockfd, buffer, 255);
+		if (i < 0) {
+			cerr << "Couldn't be able to read from the socket" << endl;
+		} else {
+			cout << "Server: " << buffer << endl;
+		}
 		if (str.compare("exit") == 0) {
 			finish = true;
 			exit(0);
 		}
 	}
 	close(sockfd);
-	return 0;
 }
+
+

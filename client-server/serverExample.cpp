@@ -12,7 +12,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <iostream>
-#include <string>
 
 using namespace std;
 
@@ -39,40 +38,19 @@ int main(int argc, char const* argv[]) {
 	}
 	listen(sockfd, 5);
 	clientLength = sizeof(clientAddr);
-	while (true) {
-		newSockFd = accept(sockfd, (struct sockaddr*)& clientAddr, &clientLength);
-		if (newSockFd < 0) {
-			cerr << "Error creating socket file descriptor for client" << endl;
-			exit(-1);
-		}
-		pid_t pid = fork();
-		if (pid < 0) {
-			cerr << "Error trying to create a new process" << endl;
-			exit(-1);
-		}
-		if (pid == 0) {
-			close(sockfd);
-			bzero(buffer, 256);
-			bool finish = false;
-			while (!finish) {
-				i = read(newSockFd, buffer, 255);
-				if (i < 0) {
-					cerr << "Error trying to read from buffer. I = " << i << endl;
-				} else {
-					cout << "Received message: " << buffer << endl;
-					string str(buffer, 4);
-					if (str.compare("exit") == 0) {
-						cout << "Closing connection with the user" << endl;
-						finish = true;
-					}
-				}
-				bzero(buffer, 256); // Limpiamos el buffer
-			}
-			exit(0);
-		} else {
-			close(newSockFd);
-		}
+	newSockFd = accept(sockfd, (struct sockaddr*)& clientAddr, &clientLength);
+	if (newSockFd < 0) {
+		cerr << "Error creating socket file descriptor for client" << endl;
+		exit(-1);
 	}
+	bzero(buffer, 256);
+	i = read(newSockFd, buffer, 255);
+	if (i < 0) {
+		cerr << "Error trying to read from buffer. I = " << i << endl;
+	} else {
+		cout << "Received message: " << buffer << endl;
+	}
+	close(newSockFd);
 	close(sockfd);
 	return 0;
 }
