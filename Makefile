@@ -1,7 +1,7 @@
 
 
-monitor: main.cpp monitor.cpp
-	g++ -g -o monitor.o main.cpp monitor.cpp
+monitor: main.cpp daemon/monitor.cpp
+	g++ -g -o monitor.o main.cpp daemon/monitor.cpp
 
 clean:
 	rm *.o

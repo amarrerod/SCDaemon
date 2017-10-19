@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <iostream>
 #include <netdb.h>
+#include <string>
 
 using namespace std;
 
@@ -42,13 +43,21 @@ int main(int argc, char const* argv[]) {
 		cerr << "Errory trying to connect to server" << endl;
 		exit(-1);
 	}
-	cout << "Introduzca el mensaje: \n>";
-	bzero(buffer, 256);
-	fgets(buffer, 255, stdin);
-	i = write(sockfd, buffer, strlen(buffer));
-	if (i < 0) {
-		cerr << "Couldn't be able to write in the socket" << endl;
-		exit(-1);
+	bool finish = false;
+	while (!finish) {
+		cout << "Introduzca el mensaje: \n> ";
+		bzero(buffer, 256);
+		fgets(buffer, 255, stdin);
+		i = write(sockfd, buffer, strlen(buffer));
+		if (i < 0) {
+			cerr << "Couldn't be able to write in the socket" << endl;
+			exit(-1);
+		}
+		string str(buffer, 4);
+		if (str.compare("exit") == 0) {
+			finish = true;
+			exit(0);
+		}
 	}
 	close(sockfd);
 	return 0;
