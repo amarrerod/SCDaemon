@@ -1,20 +1,50 @@
 
 
 #include "monitor.hpp"
-#include "processID.hpp"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <syslog.h>
+#include <fcntl.h>
+#include <chrono>
+#include <cstring>
+#include <sstream>
+
+using namespace std;
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
 
 const int Monitor::BUFFER_LENGTH = (10 * (sizeof(struct inotify_event) + NAME_MAX + 1));
-
+const int Monitor::CHRONO = 300;
 const string Monitor::MONITOR = "monitor";
+const char* STOPPING = "Stopping daemon";
+const char* STARTING = "Successfully started monitor";
+const char* LOCK = "monitor.lock";
+const char* LOG = "monitor.log";
+static bool running = true;
+const int DELAY = 1;
 
 Monitor::Monitor():
 	inotifyFileDescriptor(0),
-	eventWatch(0) {}
+	eventWatch(0) {
+}
 
 Monitor::~Monitor() {}
 
+bool Monitor::checkChrono(auto startTime) {
+	auto currentTime = chrono::high_resolution_clock::now();
+	if (chrono::duration_cast<chrono::seconds>(currentTime - startTime).count() >= CHRONO) {
+		// Enviar informacion del log
+		startTime = chrono::high_resolution_clock::now();
+		return true;
+	} else
+		return false;
+}
 
-string Monitor::showEvent(struct inotify_event* event) {
+const char* Monitor::showEvent(struct inotify_event* event) {
 	string resultString = "";
 	resultString += "\tWatch: " + event->wd;
 	resultString += "\tCookie: " + event->cookie;
@@ -92,7 +122,7 @@ string Monitor::showEvent(struct inotify_event* event) {
 		resultString += "\tName: ";
 		resultString += event->name;
 	}
-	return resultString;
+	return resultString.c_str();
 }
 
 
@@ -103,7 +133,7 @@ string Monitor::showEvent(struct inotify_event* event) {
  * Asignamos la nueva máscara
  * Lo hacemos lider de sesión (SID)
  **/
-void Monitor::start() {
+void Monitor::start(const int arguments, const char* pathname[]) {
 	pid = fork();
 	if (pid < 0) {
 		exit(1);
@@ -124,44 +154,48 @@ void Monitor::start() {
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
+	// Bloqueamos que se puedan instanciar más demonios
+	lock = open(LOCK, O_RDWR | O_CREAT, 0640);
+	if (lock < 0) {
+		exit(1); // No se instancia uno nuevo
+	}
+	if (lockf(lock, F_TLOCK, 0) < 0) {
+		exit(0); // No se puede bloquear
+	}
+	long pid = (long) getpid();
+	ostringstream ss;
+	ss << pid;
+	string pidStr = ss.str();
+	write(lock, pidStr.c_str(), strlen(pidStr.c_str()));
+	// Fichero de log
+	openlog(LOG, LOG_PID, LOG_DAEMON);
+	syslog(LOG_NOTICE, "Successfully started monitor");
+	signal(SIGCHLD, SIG_IGN);
+	signal(SIGINT, handleSignal);
+	signal(SIGSTOP, handleSignal);
+	run(arguments, pathname);
 }
 
-/**
- * Método que se encarga de parar la ejecución del demonio.
- * En primer lugar obtenemos el PID del proceso en ejecución
- * y posteriormente lo eliminamos con Kill
- **/
-void Monitor::stop() {
-	pid_t currentPID = getProcIdByName(Monitor::MONITOR);
-	if (currentPID != -1) {
-		// Kill the process
-		if (kill(currentPID, -9) < 0) {
-			cerr << "Error trying to kill the process with PID: " << currentPID << endl;
-			exit(1);
-		} else {
-			exit(0);
-		}
-	} else {
-		cerr << "Error: Monitor daemon was not running" << endl;
-		exit (1);
+
+void Monitor::handleSignal(int sign) {
+	if (sign == SIGINT || sign == SIGSTOP) {
+		syslog(LOG_NOTICE, "Stopping daemon");
+		closelog();
+		exit(EXIT_SUCCESS);
+		running = false;
+		signal(SIGINT, SIG_DFL);
+	} else if (sign == SIGCHLD) {
+		cerr << "NR" << endl;
 	}
 }
 
 
 /**
- * Método que se encarga de reiniciar la ejecución del demonio
- * Invocamos a STOP y luego a START
- **/
-void Monitor::restart() {
-	stop();
-	start();
-}
-
-/**
  * Método principal de trabajo del demonio
  **/
 void Monitor::run(const int arguments, const char* pathname[]) {
-	while (1) {
+	while (running) {
+		auto startTime = chrono::high_resolution_clock::now();
 		ssize_t numRead;
 		char* buffer;
 		char readBuffer[BUFFER_LENGTH];
@@ -181,9 +215,17 @@ void Monitor::run(const int arguments, const char* pathname[]) {
 			numRead = read(inotifyFileDescriptor, readBuffer, BUFFER_LENGTH);
 			for (buffer = readBuffer; buffer < readBuffer + numRead; ) {
 				event = (struct inotify_event*) buffer;
-				cout << showEvent(event);
+				syslog(LOG_INFO, showEvent(event));
 				buffer += sizeof(struct inotify_event*) + event->len;
 			}
 		}
+		if (checkChrono(startTime)) {
+			cout << "ENVIAR LOG" << endl;
+		}
+		sleep(DELAY);
 	}
+	// Si salimos del bucle se acaba la ejecucion
+	syslog(LOG_NOTICE, "Stopping daemon");
+	closelog();
+	exit(EXIT_SUCCESS);
 }

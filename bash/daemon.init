@@ -1,0 +1,43 @@
+#!/bin/sh
+
+startup=/vagrant/data/startup.sh
+shutdown=/vagrant/data/shutdown.sh
+prog="/vagrant/data/monitor"
+path="~/folder/"
+
+start(){
+ echo -n "Starting service"
+ /vagrant/data/monitor $path
+}
+
+stop(){
+ echo -n $"Stopping $prog"
+ killproc $prog -INT
+ echo
+}
+
+restart(){
+	stop
+	start
+}
+
+status(){
+	status $prog
+}
+
+case "$1" in
+ start)
+  start
+  ;;
+ stop)
+  stop
+  ;;
+ restart)
+	restart
+	;;
+ *) 
+	echo $"Usage: $0 {start|stop|status|restart}"
+  exit 2
+esac
+
+exit 0
