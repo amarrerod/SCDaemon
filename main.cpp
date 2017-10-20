@@ -9,7 +9,6 @@
 
 #include "daemon/monitor.hpp"
 #include <iostream>
-
 using namespace std;
 
 const int NUM_ARGS = 1;
@@ -20,6 +19,9 @@ int main(int argc, char const* argv[]) {
 		cerr << "Usage: monitor.o <path>" << endl;
 		exit(EXIT_SUCCESS);
 	} else {
+#ifdef DEBUG
+		cout << "RUNNING DAEMON" << endl;
+#endif
 		Monitor monitor;
 		monitor.start(argc, argv);
 	}

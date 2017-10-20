@@ -7,7 +7,7 @@ path="~/folder/"
 
 start(){
  echo -n "Starting service"
- /vagrant/data/monitor $path
+ ./vagrant/data/monitor $path
 }
 
 stop(){
