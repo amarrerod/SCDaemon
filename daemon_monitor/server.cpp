@@ -25,8 +25,6 @@ const char* CONNECTION = "Connection sucessfull";
 const char* RECEIVED = "Message received";
 const int CHRONO = 300;
 
-
-
 bool checkChrono(auto& startTime) {
 	auto currentTime = chrono::high_resolution_clock::now();
 	if (chrono::duration_cast<chrono::seconds>(currentTime - startTime).count() >= CHRONO) {
@@ -36,8 +34,6 @@ bool checkChrono(auto& startTime) {
 	} else
 		return false;
 }
-
-
 
 int main(int argc, char const* argv[]) {
 	int sockfd, newSockFd, portNumber;

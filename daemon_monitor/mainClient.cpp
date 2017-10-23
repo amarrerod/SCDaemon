@@ -7,12 +7,10 @@
  *
  **/
 
-
 #include "Client.hpp"
 #include <vector>
 
 using namespace std;
-
 
 int main(int argc, char const* argv[]) {
 	vector<char const*> copy;
