@@ -84,13 +84,10 @@ int main(int argc, char const* argv[]) {
 			send(newSockFd, CONNECTION, strlen(CONNECTION), 0); // Avisamos que la conexion ha sido realizada
 			while (true) {
 				i = read(newSockFd, buffer, 255);
-				if (i < 0) {
-					cerr << "Error trying to read from buffer. I = " << i << endl;
-				} else {
-					i += 1;
+				if (i > 0) {
 					// TODO
 					// GUARDAR ESTA INFORMACION EN UN FICHERO
-					//	cout << "Client(" << pidStr << "): " << buffer << endl;
+					cout << "Client(" << pidStr << "): " << buffer << endl;
 					//	send(newSockFd, RECEIVED, strlen(RECEIVED), 0); // Enviamos la confirmacion
 					//	string str(buffer, 4);
 					//	if (str.compare("exit") == 0) {

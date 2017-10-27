@@ -25,6 +25,7 @@
 #include <syslog.h>
 #include <fcntl.h>
 #include <cstring>
+#include <errno.h>
 
 using namespace std;
 
@@ -38,6 +39,8 @@ static bool running = true;
 const int DELAY = 1;
 
 using namespace std;
+
+#define DEBUG
 
 Client::Client() : inotifyFileDescriptor(0),
 	eventWatch(0) {}
@@ -65,6 +68,10 @@ Client::Client(char const* host, int port, const int arguments, vector<const cha
 		cerr << "Errory trying to connect to server" << endl;
 		exit(-1);
 	}
+#ifdef DEBUG
+	cout << "Connection done" << endl;
+#endif
+	running = true;
 	start(arguments, pathname);
 }
 
@@ -160,6 +167,9 @@ const char* Client::showEvent(struct inotify_event* event) {
  * Lo hacemos lider de sesión (SID)
  **/
 void Client::start(const int arguments, vector<const char*> pathname) {
+#ifdef DEBUG
+	cout << "Starting to daemonize" << endl;
+#endif
 	pid = fork();
 	if (pid < 0) {
 		exit(1);
@@ -177,9 +187,14 @@ void Client::start(const int arguments, vector<const char*> pathname) {
 		cerr << "Error trying to move to /";
 		exit(1);
 	}
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+#ifdef DEBUG
+	char cwd[1024];
+	getcwd(cwd, sizeof(cwd));
+	cout << "PWD: " << cwd << endl;
+#endif
+	//close(STDIN_FILENO);
+	//close(STDOUT_FILENO);
+	//close(STDERR_FILENO);
 	// Bloqueamos que se puedan instanciar más demonios
 	lock = open(LOCK, O_RDWR | O_CREAT, 0640);
 	if (lock < 0) {
@@ -199,7 +214,6 @@ void Client::start(const int arguments, vector<const char*> pathname) {
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGINT, handleSignal);
 	signal(SIGSTOP, handleSignal);
-	run(arguments, pathname);
 }
 
 
@@ -220,6 +234,9 @@ void Client::handleSignal(int sign) {
  * Método principal de trabajo del demonio
  **/
 void Client::run(const int arguments, vector<const char*> pathname) {
+#ifdef DEBUG
+	cout << "Starting daemon" << endl;
+#endif
 	// Enviamos el pid para identificar al cliente
 	long pid = (long) getpid();
 	ostringstream ss;
@@ -236,9 +253,13 @@ void Client::run(const int arguments, vector<const char*> pathname) {
 			exit(1);
 		}
 		for (int i = 0; i < arguments; ++i) {
+#ifdef DEBUG
+			cout << "PATH: " << pathname[i] << endl;
+#endif
 			eventWatch = inotify_add_watch(inotifyFileDescriptor, pathname[i], IN_ALL_EVENTS);
 			if (eventWatch == -1) {
 				cerr << "Error: eventWatch = -1" << endl;
+				cerr << "Error: " << strerror(errno) << endl;
 				exit(1);
 			}
 		}
