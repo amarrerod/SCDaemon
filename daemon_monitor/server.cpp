@@ -75,6 +75,7 @@ int main(int argc, char const* argv[]) {
 			bool finish = false;
 			string pidStr;
 			i = read(newSockFd, buffer, sizeof(long));
+			cout << "Nuevo cliente" << endl;
 			if (i < 0) {
 				cerr << "Error trying to read pid from client" << endl;
 			} else {

@@ -34,7 +34,7 @@ const char* CONNECTION = "Connection sucessfull";
 const char* IS_IN_DIR = "IS_IN_DIR";
 static bool running = true;
 const int DELAY = 1;
-const int NUM_ARGS = 2;
+const int NUM_ARGS = 4;
 
 #define DEBUG
 
@@ -43,6 +43,7 @@ static const char* showEvent(struct inotify_event* event, int& inotifyFD, int& w
 	if (event->len > 0) {
 		resultString += " Name: ";
 		resultString += event->name;
+		resultString +=  " ";
 	}
 	resultString += " Watch: " + event->wd;
 	resultString += " Cookie: " + event->cookie;
@@ -184,23 +185,12 @@ static void listDir(const char* dirName, int& inotifyFD, int& watch) {
 	}
 }
 
-
-
-int main (int argc, char* argv[]) {
-	if (argc != NUM_ARGS) {
-		cerr << "Error in args.\nUsage: ./daemon.o <path>" << endl;
-		exit(EXIT_SUCCESS);
-	}
+static void daemonize() {
 #ifdef DEBUG
 	cout << "Starting to daemonize" << endl;
 #endif
 	pid_t pid, sid;
 	int lock;
-	struct inotify_event* event;
-	int inotifyFD, watch;
-	char buf[BUF_LEN];
-	ssize_t numRead;
-	char* buffer;
 	pid = fork();
 	if (pid < 0) {
 		exit(1);
@@ -235,6 +225,49 @@ int main (int argc, char* argv[]) {
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGINT, handleSignal);
 	signal(SIGSTOP, handleSignal);
+}
+
+static int connectToServer(const char* serverID, const int port) {
+	/**
+	 * Conexion con el servidor
+	 */
+	int sockfd, i;
+	struct hostent* server;
+	struct sockaddr_in servAddr;
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) {
+		cerr << "Error creating socket file descriptor" << endl;
+		exit(-1);
+	}
+	server = gethostbyname(serverID); // Dirección del servidor
+	if (server == NULL) {
+		cerr << "Error trying to get hostbyname for server" << endl;
+		exit(-1);
+	}
+	bzero((char*)& servAddr, sizeof(servAddr));
+	servAddr.sin_family = AF_INET;
+	bcopy((char*)server->h_addr, (char*)& servAddr.sin_addr.s_addr, server->h_length);
+	servAddr.sin_port = htons(port);
+	if (connect(sockfd, (struct sockaddr*)& servAddr, sizeof(servAddr)) < 0) {
+		cerr << "Errory trying to connect to server" << endl;
+		exit(-1);
+	}
+	// ENVIAMOS PID PARA ID
+	// Enviamos el pid para identificar al cliente
+	long pid = (long) getpid();
+	ostringstream ss;
+	ss << pid;
+	string pidStr = ss.str();
+	send(sockfd, pidStr.c_str(), sizeof(pidStr.c_str()), 0);
+	return sockfd;
+}
+
+static void doWork(int& sockfd, int argc, char* argv[]) {
+	struct inotify_event* event;
+	int inotifyFD, watch;
+	char buf[BUF_LEN];
+	ssize_t numRead;
+	char* buffer;
 	// EMPEZAMOS A REGISTRAR EVENTOS
 #ifdef DEBUG
 	cout << "Starting to reg" << endl;
@@ -244,7 +277,7 @@ int main (int argc, char* argv[]) {
 		printf("Error");
 		exit(1);
 	}
-	for (int i = 1; i < argc; i++) {
+	for (int i = 1; i < argc - 2; i++) {
 #ifdef DEBUG
 		cout << "Path: " << argv[i] << endl;
 #endif
@@ -259,8 +292,22 @@ int main (int argc, char* argv[]) {
 		numRead = read(inotifyFD, buf, BUF_LEN);
 		for (buffer = buf; buffer < buf + numRead; ) {
 			event = (struct inotify_event*) buffer;
-			cout << showEvent(event, inotifyFD, watch);
+			const char* bufferServer = showEvent(event, inotifyFD, watch);
+			int i = write(sockfd, bufferServer, strlen(bufferServer));
+			//cout << showEvent(event, inotifyFD, watch);
 			buffer += sizeof(struct inotify_event) + event->len;
 		}
 	}
+}
+
+
+int main (int argc, char* argv[]) {
+	if (argc != NUM_ARGS) {
+		cerr << "Error in args.\nUsage: ./daemon.o <path> <server> <port>" << endl;
+		exit(EXIT_SUCCESS);
+	}
+	daemonize();
+	int sockfd = connectToServer(argv[2], atoi(argv[3]));
+	doWork(sockfd, argc, argv);
+	return (EXIT_SUCCESS);
 }
