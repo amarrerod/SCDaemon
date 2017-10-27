@@ -1,0 +1,22 @@
+Watch:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+ Name: folderA Watch:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+atch:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+ Name: folderA Watch:  Cookie:  ma
+sk: IN_CLOSE_NOWRITE  mask: IN_ALL_EVENTS  mask: IN_CLOSE  mask: IN_ISDIR 
+atch:  Cookie:  mask: IN_CLOSE_NOWRITE  mask: IN_ALL_EVENTS  mask: IN_CLOSE  mask: IN_ISDIR 
+ Name: folderB Watch:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+tch
+:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+ Name: folderC tch:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+ch:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+ Name: folderC tch:  Cookie:  mask: IN_CLOS
+E_NOWRITE  mask: IN_ALL_EVENTS  mask: IN_CLOSE  mask: IN_ISDIR 
+ch:  Cookie:  mask: IN_CLOSE_NOWRITE  mask: IN_ALL_EVENTS  mask: IN_CLOSE  mask: IN_ISDIR 
+ Name: folderB Watch:  Cookie:  mask: IN_CLOSE_NOWRITE  mask: IN_ALL_EVENTS  mask: IN_CLOSE  mask: I
+N_ISDIR 
+tch:  Cookie:  mask: IN_CLOSE_NOWRITE  mask: IN_ALL_EVENTS  mask: IN_CLOSE  mask: IN_ISDIR 
+
+ Name: folderA Watch:  Cookie:  mask: IN_OPEN  mask: IN_ALL_EVENTS  mask: IN_ISDIR 
+
+ Name: folderA Watch:  Cookie:  mask: IN_CLOSE_NOWRITE  mask: IN_ALL_EVENTS  mask: IN_CLOSE  mask: IN_ISDIR 
+

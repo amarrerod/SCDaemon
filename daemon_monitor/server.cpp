@@ -15,7 +15,7 @@
 #include <string>
 #include <chrono>
 #include <cstring>
-
+#include <fstream>
 
 using namespace std;
 using std::chrono::duration_cast;
@@ -23,7 +23,7 @@ using std::chrono::nanoseconds;
 
 const char* CONNECTION = "Connection sucessfull";
 const char* RECEIVED = "Message received";
-const int CHRONO = 300;
+const int CHRONO = 30;
 
 bool checkChrono(auto& startTime) {
 	auto currentTime = chrono::high_resolution_clock::now();
@@ -82,13 +82,14 @@ int main(int argc, char const* argv[]) {
 				pidStr = buffer;
 			}
 			bzero(buffer, 256);
-			send(newSockFd, CONNECTION, strlen(CONNECTION), 0); // Avisamos que la conexion ha sido realizada
+			//send(newSockFd, CONNECTION, strlen(CONNECTION), 0); // Avisamos que la conexion ha sido realizada
+			ofstream outputFile("serverlogs/" pidStr + ".log");
 			while (true) {
 				i = read(newSockFd, buffer, 255);
 				if (i > 0) {
 					// TODO
 					// GUARDAR ESTA INFORMACION EN UN FICHERO
-					cout << "Client(" << pidStr << "): " << buffer << endl;
+					outputFile << buffer << endl;
 					//	send(newSockFd, RECEIVED, strlen(RECEIVED), 0); // Enviamos la confirmacion
 					//	string str(buffer, 4);
 					//	if (str.compare("exit") == 0) {
@@ -101,6 +102,7 @@ int main(int argc, char const* argv[]) {
 					send(newSockFd, RECEIVED, strlen(RECEIVED), 0);
 				}
 			}
+			outputFile.close();
 			exit(0);
 		} else {
 			close(newSockFd);
