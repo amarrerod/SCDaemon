@@ -1,18 +1,16 @@
 #!/bin/sh
 
-startup=/vagrant/data/startup.sh
-shutdown=/vagrant/data/shutdown.sh
-prog="/vagrant/data/monitor"
-path="~/folder/"
+prog="daemon"
+path="/test_folder/"
 
 start(){
  echo -n "Starting service"
- ./vagrant/data/monitor $path
+ ./vagrant_data/daemon_monitor/daemon $path localhost 1890
 }
 
 stop(){
  echo -n $"Stopping $prog"
- killproc $prog -INT
+ pkill $prog
  echo
 }
 
@@ -36,7 +34,7 @@ case "$1" in
 	restart
 	;;
  *) 
-	echo $"Usage: $0 {start|stop|status|restart}"
+	echo $"Usage: $0 {start|stop|restart}"
   exit 2
 esac
 

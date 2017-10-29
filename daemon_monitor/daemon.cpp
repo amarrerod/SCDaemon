@@ -38,83 +38,83 @@ const int NUM_ARGS = 4;
 
 #define DEBUG
 
-static const char* showEvent(struct inotify_event* event, int& inotifyFD, int& watch) {
+static const char* showEvent(struct inotify_event* event, bool& inDir) {
 	string resultString = "";
 	if (event->len > 0) {
-		resultString += " Name: ";
+		resultString += "Name: ";
 		resultString += event->name;
 		resultString +=  " ";
 	}
-	resultString += " Watch: " + event->wd;
-	resultString += " Cookie: " + event->cookie;
+	//resultString += " Watch: " + event->wd;
+	//resultString += " Cookie: " + event->cookie;
 	if (event->mask & IN_CREATE) {
-		resultString += " mask: IN_CREATE ";
+		resultString += "CREATE ";
 	}
 	if (event->mask & IN_MODIFY) {
-		resultString += " mask: IN_MODIFY ";
+		resultString += "MODIFY ";
 	}
 	if (event->mask & IN_ACCESS) {
-		resultString += " mask: IN_ACCESS ";
+		resultString += "ACCESS ";
 	}
 	if (event->mask & IN_ATTRIB) {
-		resultString += " mask: IN_ATTRIB ";
+		resultString += "ATTRIB ";
 	}
 	if (event->mask & IN_CLOSE_WRITE) {
-		resultString += " mask: IN_CLOSE_WRITE ";
+		resultString += "CLOSE_WRITE ";
 	}
 	if (event->mask & IN_CLOSE_NOWRITE) {
-		resultString += " mask: IN_CLOSE_NOWRITE ";
+		resultString += "CLOSE_NOWRITE ";
 	}
 	if (event->mask & IN_DELETE) {
-		resultString += " mask: IN_DELETE ";
+		resultString += "DELETE ";
 	}
 	if (event->mask & IN_DELETE_SELF) {
-		resultString += " mask: IN_DELETE_SELF ";
+		resultString += "DELETE_SELF ";
 	}
 	if (event->mask & IN_MOVE_SELF) {
-		resultString += " mask: IN_MOVE_SELF ";
+		resultString += "MOVE_SELF ";
 	}
 	if (event->mask & IN_MOVED_FROM) {
-		resultString += " mask: IN_MOVED_FROM ";
+		resultString += "MOVED_FROM ";
 	}
 	if (event->mask & IN_MOVED_TO) {
-		resultString += " mask: IN_MOVED_TO ";
+		resultString += "MOVED_TO ";
 	}
 	if (event->mask & IN_OPEN) {
-		resultString += " mask: IN_OPEN ";
+		resultString += "OPEN ";
 	}
 	if (event->mask & IN_ALL_EVENTS) {
-		resultString += " mask: IN_ALL_EVENTS ";
+		resultString += "ALL_EVENTS ";
 	}
 	if (event->mask & IN_MOVE) {
-		resultString += " mask: IN_MOVE ";
+		resultString += "MOVE ";
 	}
 	if (event->mask & IN_CLOSE) {
-		resultString += " mask: IN_CLOSE ";
+		resultString += "CLOSE ";
 	}
 	if (event->mask & IN_DONT_FOLLOW) {
-		resultString += " mask: IN_DONT_FOLLOW ";
+		resultString += "DONT_FOLLOW ";
 	}
 	if (event->mask & IN_MASK_ADD) {
-		resultString += " mask: IN_MASK_ADD ";
+		resultString += "MASK_ADD ";
 	}
 	if (event->mask & IN_ONESHOT) {
-		resultString += " mask: IN_ONESHOT ";
+		resultString += "ONESHOT ";
 	}
 	if (event->mask & IN_ONLYDIR) {
-		resultString += " mask: IN_ONLYDIR ";
+		resultString += "ONLYDIR ";
 	}
 	if (event->mask & IN_IGNORED) {
-		resultString += " mask: IN_IGNORED ";
+		resultString += "IGNORED ";
 	}
 	if (event->mask & IN_ISDIR) {
-		resultString += " mask: IN_ISDIR ";
+		resultString += "ISDIR ";
 	}
 	if (event->mask & IN_Q_OVERFLOW) {
-		resultString += " mask: IN_Q_OVERFLOW ";
+		resultString += "Q_OVERFLOW ";
 	}
 	if (event->mask & IN_UNMOUNT) {
-		resultString += " mask: IN_UNMOUNT ";
+		resultString += "UNMOUNT ";
 	}
 	resultString += "\n";
 	return resultString.c_str();
@@ -128,16 +128,14 @@ static void handleSignal(int sign) {
 		running = false;
 		signal(SIGINT, SIG_DFL);
 	} else if (sign == SIGCHLD) {
-		cerr << "NR" << endl;
+		cerr << endl;
 	}
 }
 
 static void listDir(const char* dirName, int& inotifyFD, int& watch) {
 	DIR* d;
-	/* Open the directory specified by "dirName". */
 	d = opendir (dirName);
-	/* Check it was opened. */
-	if (! d) {
+	if (!d) {
 		fprintf (stderr, "Cannot open directory '%s': %s\n",
 		         dirName, strerror (errno));
 		exit (EXIT_FAILURE);
@@ -145,16 +143,12 @@ static void listDir(const char* dirName, int& inotifyFD, int& watch) {
 	while (1) {
 		struct dirent* entry;
 		const char* d_name;
-		/* "Readdir" gets subsequent entries from "d". */
 		entry = readdir (d);
-		if (! entry) {
-			/* There are no more entries in this directory, so break
-			   out of the while loop. */
+		if (!entry) {
 			break;
 		}
 		d_name = entry->d_name;
 		if (entry->d_type & DT_DIR) {
-			/* Check that the directory is not "d" or d's parent. */
 			if (strcmp (d_name, "..") != 0 &&
 			    strcmp (d_name, ".") != 0) {
 				int path_length;
@@ -172,12 +166,10 @@ static void listDir(const char* dirName, int& inotifyFD, int& watch) {
 					printf("Error");
 					exit(1);
 				}
-				/* Recursively call "list_dir" with the new path. */
 				listDir (path, inotifyFD, watch);
 			}
 		}
 	}
-	/* After going through all the entries, close the directory. */
 	if (closedir (d)) {
 		fprintf (stderr, "Could not close '%s': %s\n",
 		         dirName, strerror (errno));
@@ -268,6 +260,8 @@ static void doWork(int& sockfd, int argc, char* argv[]) {
 	char buf[BUF_LEN];
 	ssize_t numRead;
 	char* buffer;
+	char response[256];
+	bool inDir = false;
 	// EMPEZAMOS A REGISTRAR EVENTOS
 #ifdef DEBUG
 	cout << "Starting to reg" << endl;
@@ -292,10 +286,22 @@ static void doWork(int& sockfd, int argc, char* argv[]) {
 		numRead = read(inotifyFD, buf, BUF_LEN);
 		for (buffer = buf; buffer < buf + numRead; ) {
 			event = (struct inotify_event*) buffer;
-			const char* bufferServer = showEvent(event, inotifyFD, watch);
+			const char* bufferServer = showEvent(event, inDir);
 			int i = write(sockfd, bufferServer, strlen(bufferServer));
-			//cout << showEvent(event, inotifyFD, watch);
+			// Leemos la confirmacion
+			bzero(response, 256);
+			i = read(sockfd, response, 255);
+			if (i > 0) {
+				syslog(LOG_NOTICE, response);
+			}
 			buffer += sizeof(struct inotify_event) + event->len;
+		}
+		/**
+		 * Si se produce un evento dentro un un directorio comprobamos si se han  * creado o borrado nuevos subdirectorios
+		 */
+		if (inDir) {
+			listDir(argv[1], inotifyFD, watch);
+			inDir = false;
 		}
 	}
 }

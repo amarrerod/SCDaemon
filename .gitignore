@@ -1,3 +1,7 @@
 processID.cpp processID.hpp
 monitor.o
 monitor
+client-server/
+daemon/
+main.cpp
+server.cpp
