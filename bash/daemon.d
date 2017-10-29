@@ -4,12 +4,12 @@ prog="daemon"
 path="/test_folder/"
 
 start(){
- echo -n "Starting service"
+ echo -n "Starting service\t"
  ./vagrant_data/daemon_monitor/daemon $path localhost 1890
 }
 
 stop(){
- echo -n $"Stopping $prog"
+ echo -n $"Stopping $prog\t"
  pkill $prog
  echo
 }
